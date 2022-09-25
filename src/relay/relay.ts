@@ -1,14 +1,15 @@
 import { Gpio } from "onoff";
 
 export class Relay {
+  private _state: 0 | 1 = 1;
+  private _gpio: Gpio | undefined;
   private _pin: number;
-  private _stat: 0 | 1 = 0;
-  private _gpio;
 
   constructor(pin: number) {
     this._pin = pin;
     if (Gpio.accessible) {
-      this._gpio = new Gpio(pin, "out");
+      this._gpio = new Gpio(this._pin, "out");
+      this.writeState();
       process.on("SIGINT", () => {
         this._gpio?.unexport();
       });
@@ -16,37 +17,36 @@ export class Relay {
   }
 
   public get state() {
-    return this._stat;
+    return this._state;
   }
 
-  public open() {
-    this.sync();
-    if (this._stat === 0) {
+  public async open() {
+    await this.syncState();
+    if (this._state === 1) {
       return;
     }
-    this._stat = 0;
-    this.writeSync();
+    this._state = 1;
+    return this.writeState();
   }
 
-  public close() {
-    this.sync();
-    if (this._stat === 1) {
+  public async close() {
+    await this.syncState();
+    if (this._state === 0) {
       return;
     }
-    this._stat = 1;
-    this.writeSync();
+    this._state = 0;
+    return this.writeState();
   }
 
-  private sync() {
+  private async syncState() {
     if (!this._gpio) {
       return;
     }
 
-    this._stat = this._gpio.readSync();
+    this._state = await this._gpio.read();
   }
 
-  private writeSync() {
-    console.log(`${this._stat ? "close" : "open"} relais on pin ${this._pin}`);
-    this._gpio?.writeSync(this._stat);
+  private writeState() {
+    return this._gpio?.write(this._state);
   }
 }

@@ -1,38 +1,44 @@
+import { IsMoovingError } from "../door/isMoovingError";
+import { timeOut } from "../helpers/timeOut";
 import { Relay } from "../relay/relay";
 
 export class Motor {
-  private _relayUp: Relay;
-  private _relayDown: Relay;
+  private _relayMove: Relay;
+  private _relayDirection: Relay;
 
-  constructor(pinUp: number, pinDown: number) {
-    if (pinDown === pinUp) {
+  constructor(pinMove: number, pinDirection: number) {
+    if (pinDirection === pinMove) {
       throw new Error("Relays must not be on same pin");
     }
 
-    this._relayDown = new Relay(pinDown);
-    this._relayUp = new Relay(pinUp);
+    this._relayDirection = new Relay(pinDirection);
+    this._relayMove = new Relay(pinMove);
   }
 
-  public up() {
+  public async up() {
     if (this.isMoving) {
-      throw new Error("motor is mooving");
+      throw new IsMoovingError();
     }
-    this._relayUp.close();
+    await this._relayDirection.close();
+    await timeOut(200);
+    return this._relayMove.close();
   }
 
-  public down() {
+  public async down() {
     if (this.isMoving) {
-      throw new Error("motor is mooving");
+      throw new IsMoovingError();
     }
-    this._relayDown.close();
+    await this._relayDirection.open();
+    await timeOut(200);
+    return this._relayMove.close();
   }
 
   public stop() {
-    this._relayDown.open();
-    this._relayUp.open();
+    this._relayMove.open();
+    this._relayDirection.open();
   }
 
   public get isMoving() {
-    return this._relayDown.state || this._relayUp.state;
+    return this._relayMove.state === 0;
   }
 }

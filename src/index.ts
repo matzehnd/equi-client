@@ -1,15 +1,38 @@
+import { CronJob } from "cron";
+
 import { Door } from "./door/door";
+import { Feeding } from "./feeding/feeding";
 
-const door = new Door(23, 24);
+const door = new Door(17, 4, 5000);
 
-process.stdin.addListener("data", (data) => {
+const feeding = new Feeding({ hour: 23, minute: 39, length: 1 }, door);
+feeding.start();
+
+process.stdin.addListener("data", async (data) => {
   console.log("data.toString() :>> ", data.toString());
   if (data.toString().replace(/[\n\r]/g, "") === "8") {
     console.log("Please open door");
-    door.open();
+    try {
+      await door.open();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   }
   if (data.toString().replace(/[\n\r]/g, "") === "2") {
     console.log("Please close door");
-    door.close();
+    try {
+      await door.close();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  }
+
+  if (data.toString().replace(/[\n\r]/g, "") === "5") {
+    console.log("Please move door");
+    try {
+      await door.switch();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   }
 });
