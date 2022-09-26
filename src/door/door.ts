@@ -53,7 +53,7 @@ export class Door {
 
   public async switch() {
     if (this._state === "open") {
-      return this.close;
+      return this.close();
     }
 
     return this.open();

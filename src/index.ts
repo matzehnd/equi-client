@@ -1,9 +1,21 @@
 import { CronJob } from "cron";
+import { Button } from "./button/button";
 
 import { Door } from "./door/door";
 import { Feeding } from "./feeding/feeding";
 
 const door = new Door(17, 4, 5000);
+const button = new Button(27, async (err) => {
+  if (err) {
+    console.log("err :>> ", err);
+    return;
+  }
+  try {
+    await door.switch();
+  } catch (error) {
+    console.log("error :>> ", error);
+  }
+});
 
 const feeding = new Feeding({ hour: 23, minute: 39, length: 1 }, door);
 feeding.start();
