@@ -23,8 +23,9 @@ export class Feeding {
     this._door = door;
   }
 
-  public start() {
+  public activate() {
     this.setCronJobs();
+    console.log("activated :>> ", this.feedingInfo);
   }
 
   private setCronJobs() {
@@ -71,8 +72,13 @@ export class Feeding {
     }
   }
 
-  public stop() {
+  public deactivate() {
     this._closeCron?.stop();
     this._openCron?.stop();
+    console.log("deactivated :>> ", this.feedingInfo);
+  }
+
+  public get feedingInfo() {
+    return this._feeding;
   }
 }
