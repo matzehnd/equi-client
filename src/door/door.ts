@@ -65,10 +65,14 @@ export class Door {
   }
 
   public async switch() {
-    if (this._state === "open") {
-      return this.close();
+    if (this._motor.isMoving) {
+      return this._motor.stop();
     }
 
-    return this.open();
+    if (this._state === "closed") {
+      return this.open();
+    }
+
+    return this.close();
   }
 }
