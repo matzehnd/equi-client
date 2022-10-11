@@ -34,8 +34,7 @@ export class Motor {
   }
 
   public stop() {
-    this._relayMove.open();
-    this._relayDirection.open();
+    return Promise.all([this._relayMove.open(), this._relayDirection.open()]);
   }
 
   public get isMoving() {

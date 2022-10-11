@@ -1,13 +1,13 @@
-import { Socket } from "socket.io-client";
 import { timeOut } from "../helpers/timeOut";
 import { Motor } from "../motor/motor";
-import { IsMoovingError } from "./isMoovingError";
+import { Socket } from "../Socket/Socket";
 
 export class Door {
   private _motor: Motor;
   private _state: "closed" | "open" | "unknown" = "unknown";
   private _movingTime: number;
-  private _socket: Socket | undefined;
+  private _socket: Socket;
+  private _timeout: NodeJS.Timeout | undefined;
 
   constructor(
     pinMove: number,
@@ -27,9 +27,10 @@ export class Door {
     }
     this.setState("unknown");
     await this._motor.up();
-    await timeOut(this._movingTime);
-    this._motor.stop();
-    this.setState("open");
+    this._timeout = setTimeout(async () => {
+      await this._motor.stop();
+      this.setState("open");
+    }, this._movingTime);
   }
 
   public async close() {
@@ -38,16 +39,17 @@ export class Door {
     }
     this.setState("unknown");
     await this._motor.down();
-    await timeOut(this._movingTime);
-    this._motor.stop();
-    this.setState("closed");
+    this._timeout = setTimeout(async () => {
+      await this._motor.stop();
+      this.setState("closed");
+    }, this._movingTime);
   }
 
   public async forceClose() {
-    this._motor.stop();
+    await this._motor.stop();
     await this._motor.down();
     await timeOut(2 * this._movingTime);
-    this._motor.stop();
+    await this._motor.stop();
     this.setState("closed");
   }
 
@@ -64,9 +66,14 @@ export class Door {
     this._movingTime = time;
   }
 
-  public async switch() {
+  public stop() {
+    clearTimeout(this._timeout);
+    return this._motor.stop();
+  }
+
+  public async moveOrStop() {
     if (this._motor.isMoving) {
-      return this._motor.stop();
+      return this.stop();
     }
 
     if (this._state === "closed") {
