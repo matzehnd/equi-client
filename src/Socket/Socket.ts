@@ -28,12 +28,12 @@ export class Socket {
   }
 
   public emit(event: string, body: any) {
-    console.log("event :>> ", event, ": ", body);
     if (!this._socket.connected) {
       this._unsentMessages.push({ event, body });
       return;
     }
 
+    console.log("event :>> ", event, ": ", body);
     this._socket.emit(event, body);
   }
 
